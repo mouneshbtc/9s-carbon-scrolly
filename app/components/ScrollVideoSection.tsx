@@ -5,24 +5,50 @@ import { useEffect, useRef, useState } from 'react'
 export default function ScrollVideoSection() {
   const sectionRef = useRef<HTMLElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
+  const rafRef = useRef<number>(0)
+  const progressRef = useRef(0)
   const [ready, setReady] = useState(false)
+  const [videoFailed, setVideoFailed] = useState(false)
   const [showEnd, setShowEnd] = useState(false)
   const [showScroll, setShowScroll] = useState(true)
 
+  // Force-load video — iOS Safari ignores preload="auto" without this
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
-    const mark = () => setReady(true)
-    video.addEventListener('loadedmetadata', mark)
-    video.addEventListener('canplay', mark)
-    // already loaded
-    if (video.readyState >= 1) { setReady(true); return }
+
+    const onReady = () => setReady(true)
+    const onError = () => setVideoFailed(true)
+
+    video.addEventListener('loadedmetadata', onReady)
+    video.addEventListener('canplay', onReady)
+    video.addEventListener('error', onError)
+
+    // Explicitly trigger load — required on iOS
+    video.load()
+
+    if (video.readyState >= 1) setReady(true)
+
     return () => {
-      video.removeEventListener('loadedmetadata', mark)
-      video.removeEventListener('canplay', mark)
+      video.removeEventListener('loadedmetadata', onReady)
+      video.removeEventListener('canplay', onReady)
+      video.removeEventListener('error', onError)
     }
   }, [])
 
+  // Fallback: if video hasn't loaded after 4s, show end state anyway
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!ready) {
+        setVideoFailed(true)
+        setShowEnd(true)
+        setShowScroll(false)
+      }
+    }, 4000)
+    return () => clearTimeout(timer)
+  }, [ready])
+
+  // Scroll scrubbing with rAF for smooth mobile performance
   useEffect(() => {
     if (!ready) return
     const section = sectionRef.current
@@ -30,20 +56,35 @@ export default function ScrollVideoSection() {
     if (!section || !video) return
 
     const onScroll = () => {
-      const { top, height } = section.getBoundingClientRect()
-      const progress = Math.max(0, Math.min(1, -top / (height - window.innerHeight)))
-      if (video.duration) video.currentTime = progress * video.duration
-      setShowEnd(progress >= 0.88)
-      setShowScroll(progress < 0.04)
+      cancelAnimationFrame(rafRef.current)
+      rafRef.current = requestAnimationFrame(() => {
+        const { top, height } = section.getBoundingClientRect()
+        const progress = Math.max(0, Math.min(1, -top / (height - window.innerHeight)))
+        progressRef.current = progress
+
+        if (video.duration && isFinite(video.duration)) {
+          video.currentTime = progress * video.duration
+        }
+
+        setShowEnd(progress >= 0.88)
+        setShowScroll(progress < 0.04)
+      })
     }
 
     window.addEventListener('scroll', onScroll, { passive: true })
     onScroll()
-    return () => window.removeEventListener('scroll', onScroll)
+
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      cancelAnimationFrame(rafRef.current)
+    }
   }, [ready])
 
+  // If video completely failed, shorten the section so user isn't stuck scrolling
+  const sectionHeight = videoFailed ? '100vh' : '500vh'
+
   return (
-    <section ref={sectionRef} style={{ height: '500vh', position: 'relative' }}>
+    <section ref={sectionRef} style={{ height: sectionHeight, position: 'relative' }}>
       <div style={{
         position: 'sticky',
         top: 0,
@@ -51,7 +92,7 @@ export default function ScrollVideoSection() {
         overflow: 'hidden',
         background: '#0d0c0a',
       }}>
-        {/* Video */}
+        {/* Video — hidden via opacity if failed, poster still shows */}
         <video
           ref={videoRef}
           src="/hero-animation.mp4"
@@ -66,14 +107,31 @@ export default function ScrollVideoSection() {
             height: '100%',
             objectFit: 'cover',
             objectPosition: 'center',
+            opacity: videoFailed ? 0 : 1,
           }}
         />
 
-        {/* Vignette — stronger at end to frame the tagline */}
+        {/* Poster fallback — shown when video fails on mobile */}
+        {videoFailed && (
+          <img
+            src="/hero-poster.jpg"
+            alt=""
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center',
+            }}
+          />
+        )}
+
+        {/* Vignette */}
         <div style={{
           position: 'absolute',
           inset: 0,
-          background: showEnd
+          background: showEnd || videoFailed
             ? 'linear-gradient(to bottom, transparent 30%, rgba(13,12,10,0.97) 100%)'
             : 'linear-gradient(to bottom, transparent 55%, rgba(13,12,10,0.88) 100%)',
           transition: 'background 0.6s ease',
@@ -81,7 +139,7 @@ export default function ScrollVideoSection() {
           zIndex: 1,
         }} />
 
-        {/* END STATE — tagline + CTA */}
+        {/* End state — tagline + CTA */}
         <div style={{
           position: 'absolute',
           bottom: '80px',
@@ -91,19 +149,14 @@ export default function ScrollVideoSection() {
           alignItems: 'center',
           gap: '24px',
           zIndex: 2,
-          opacity: showEnd ? 1 : 0,
-          transform: showEnd ? 'translateY(0)' : 'translateY(16px)',
+          opacity: showEnd || videoFailed ? 1 : 0,
+          transform: showEnd || videoFailed ? 'translateY(0)' : 'translateY(16px)',
           transition: 'opacity 0.6s ease, transform 0.6s ease',
-          pointerEvents: showEnd ? 'auto' : 'none',
+          pointerEvents: showEnd || videoFailed ? 'auto' : 'none',
           padding: '0 24px',
           textAlign: 'center',
         }}>
-          {/* Gold divider */}
-          <div style={{
-            width: '48px',
-            height: '1px',
-            background: 'var(--gold, #c8a84b)',
-          }} />
+          <div style={{ width: '48px', height: '1px', background: 'var(--gold, #c8a84b)' }} />
 
           <h1 style={{
             fontFamily: 'var(--font-barlow-condensed, sans-serif)',
@@ -141,7 +194,7 @@ export default function ScrollVideoSection() {
           </a>
         </div>
 
-        {/* Scroll cue — only at the very start */}
+        {/* Scroll cue */}
         <div style={{
           position: 'absolute',
           bottom: '28px',
@@ -154,7 +207,7 @@ export default function ScrollVideoSection() {
           textTransform: 'uppercase',
           color: 'var(--muted, #5a5854)',
           zIndex: 2,
-          opacity: showScroll ? 1 : 0,
+          opacity: showScroll && !videoFailed ? 1 : 0,
           transition: 'opacity 0.4s ease',
           animation: 'pulse 2.4s ease-in-out infinite',
           whiteSpace: 'nowrap',
@@ -174,7 +227,7 @@ export default function ScrollVideoSection() {
           <div style={{
             height: '100%',
             background: 'var(--gold, #c8a84b)',
-            width: showEnd ? '100%' : '0%',
+            width: showEnd || videoFailed ? '100%' : '0%',
             transition: 'width 0.4s ease',
           }} />
         </div>
