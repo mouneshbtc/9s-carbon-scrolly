@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RS6 9S Carbon | Configurator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #0d0c0a;
+  --nav:      #0f0e0c;
+  --panel:    #131210;
+  --panel2:   #1c1b18;
+  --border:   #2a2926;
+  --border2:  #3a3935;
+  --ink:      #f0ece5;
+  --ink2:     #9a978f;
+  --muted:    #5a5854;
+  --red:      #e03030;
+  --gold:     #c8a84b;
+  --stage:    #e6e4df;
+  --ease:     cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ui:       'Barlow Condensed', sans-serif;
+  --body:     'Barlow', sans-serif;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--body);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* ─────────────────────────────────────────
+   CARBON FIBER SHIMMER ANIMATION
+   A slow diagonal highlight sweep that
+   mimics light catching a carbon weave.
+   Applied on dark surfaces (nav + panel).
+───────────────────────────────────────── */
+@keyframes cfShimmer {
+  0%   { transform: translateX(-120%) skewX(-20deg); }
+  100% { transform: translateX(420%)  skewX(-20deg); }
+}
+
+/* Carbon weave texture — tight diagonal grid */
+.cf-surface {
+  position: relative;
+  overflow: hidden;
+}
+.cf-surface::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(45deg,
+      rgba(255,255,255,0.028) 0, rgba(255,255,255,0.028) 1px,
+      transparent 1px, transparent 4px
+    ),
+    repeating-linear-gradient(-45deg,
+      rgba(255,255,255,0.028) 0, rgba(255,255,255,0.028) 1px,
+      transparent 1px, transparent 4px
+    );
+  pointer-events: none;
+  z-index: 0;
+}
+/* the moving shimmer band */
+.cf-surface::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 18%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255,255,255,0.055) 40%,
+    rgba(255,255,255,0.08)  50%,
+    rgba(255,255,255,0.055) 60%,
+    transparent 100%
+  );
+  animation: cfShimmer 9s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* stagger second shimmer on bottom panel (different timing) */
+.cf-surface-slow::after {
+  animation-duration: 13s;
+  animation-delay: -4s;
+}
+
+/* ensure children sit above cf layers */
+.cf-surface > * { position: relative; z-index: 2; }
+
+/* ── NAV ── */
+nav {
+  height: 58px;
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  background: var(--nav);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  z-index: 30;
+}
+
+.nav-brand {
+  font-family: var(--ui);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
+  flex-shrink: 0;
+  user-select: none;
+}
+.nav-brand span {
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  color: var(--ink2);
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  margin: 0 auto;
+}
+.nav-link {
+  font-family: var(--ui);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #c8c5be;
+  text-decoration: none;
+  padding: 7px 16px;
+  border-radius: 3px;
+  transition: color 0.15s;
+  cursor: pointer;
+}
+.nav-link:hover { color: var(--ink); }
+
+.nav-cta {
+  font-family: var(--ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--border2);
+  padding: 7px 18px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  flex-shrink: 0;
+}
+.nav-cta:hover { border-color: var(--ink2); }
+
+/* ── SUBHEADER ── */
+.subheader {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  z-index: 20;
+  gap: 18px;
+}
+
+.model-identity {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+.model-brand-label {
+  font-family: var(--ui);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ink2);
+  line-height: 1;
+}
+.model-name {
+  font-family: var(--ui);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+  line-height: 1;
+  margin-top: 3px;
+}
+
+.subheader-sep {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+.subheader-spacer { flex: 1; }
+
+.tab-group {
+  display: flex;
+  align-items: center;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 3px;
+  gap: 2px;
+}
+.tab-btn {
+  font-family: var(--ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 5px 14px;
+  border-radius: 100px;
+  border: none;
+  background: transparent;
+  color: var(--ink2);
+  cursor: pointer;
+  transition: background 0.18s var(--ease), color 0.18s var(--ease);
+  white-space: nowrap;
+  user-select: none;
+}
+.tab-btn:hover { color: var(--ink); }
+.tab-btn.active { background: var(--ink); color: #0d0c0a; }
+
+/* ── STAGE — clean neutral studio gray ── */
+.stage {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--stage);
+  /* subtle inner vignette — darkens corners, keeps center clean */
+  box-shadow: inset 0 0 120px rgba(0,0,0,0.18);
+}
+
+.car-wrap {
+  position: relative;
+  width: min(86vw, 1020px);
+  z-index: 2;
+  animation: fadeUp 0.8s var(--ease-out) both;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.car-base {
+  display: block;
+  width: 100%;
+  height: auto;
+  position: relative;
+  z-index: 1;
+  user-select: none;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+.part-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  z-index: 2;
+  mix-blend-mode: multiply;
+  opacity: 0;
+  transition: opacity 0.35s var(--ease);
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.part-overlay.visible { opacity: 1; }
+.part-overlay.highlighted {
+  mix-blend-mode: normal;
+  filter: url(#partHighlight);
+}
+
+/* stage corner labels */
+.stage-tag {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  z-index: 10;
+  pointer-events: none;
+  text-align: right;
+}
+.stage-tag-line1 {
+  font-family: var(--ui);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(0,0,0,0.45);
+  display: block;
+}
+.stage-tag-line2 {
+  font-family: var(--ui);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(0,0,0,0.4);
+  display: block;
+  margin-top: 3px;
+}
+
+.kit-total {
+  position: absolute;
+  bottom: 24px;
+  left: 28px;
+  z-index: 10;
+  pointer-events: none;
+  animation: fadeUp 0.7s 0.2s var(--ease-out) both;
+}
+.kit-total-label {
+  font-family: var(--ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(0,0,0,0.5);
+  display: block;
+  margin-bottom: 3px;
+}
+.kit-total-amount {
+  font-family: var(--ui);
+  font-size: 52px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  color: rgba(0,0,0,0.15);
+  transition: color 0.4s var(--ease);
+}
+.kit-total-amount.has-items { color: rgba(0,0,0,0.82); }
+.kit-parts-count {
+  margin-top: 5px;
+  font-family: var(--ui);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(0,0,0,0.5);
+  min-height: 15px;
+}
+
+/* ── BOTTOM PANEL ── */
+.bottom-panel {
+  flex-shrink: 0;
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: stretch;
+  height: 162px;
+}
+
+.parts-track {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 22px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.parts-track::-webkit-scrollbar { display: none; }
+
+/* ── PART CARD ── */
+.part-card {
+  flex-shrink: 0;
+  width: 192px;
+  height: 130px;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 13px 14px 13px;
+  cursor: pointer;
+  transition:
+    border-color 0.18s var(--ease),
+    box-shadow 0.18s var(--ease),
+    transform 0.18s var(--ease),
+    background 0.18s var(--ease);
+  position: relative;
+  user-select: none;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.part-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--gold) 0%, #e8d080 100%);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.28s var(--ease-out);
+  border-radius: 5px 5px 0 0;
+}
+.part-card:hover {
+  border-color: var(--border2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.55);
+}
+.part-card.selected {
+  border-color: var(--gold);
+  background: #1e1c10;
+  box-shadow: 0 4px 24px rgba(200,168,75,0.14);
+}
+.part-card.selected::before { transform: scaleX(1); }
+
+.card-top {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex: 1;
+  min-height: 0;
+}
+.part-thumb-wrap {
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.part-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  filter: invert(1) brightness(0.82);
+}
+.card-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.part-name {
+  font-family: var(--ui);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.part-sku {
+  font-family: var(--ui);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  color: var(--ink2);
+}
+
+.card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--border);
+}
+.part-price {
+  font-family: var(--ui);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--red);
+  letter-spacing: 0.02em;
+}
+
+.toggle-btn {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--ink2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 300;
+  line-height: 1;
+  transition: all 0.15s var(--ease);
+  flex-shrink: 0;
+  padding: 0;
+  padding-bottom: 1px;
+}
+.toggle-btn:hover { border-color: var(--ink2); color: var(--ink); }
+.part-card.selected .toggle-btn {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #0d0c0a;
+  font-size: 16px;
+}
+
+/* ── ACTION PANEL ── */
+.action-panel {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 0 28px;
+  border-left: 1px solid var(--border);
+  min-width: 180px;
+}
+.selected-label {
+  font-family: var(--ui);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink2);
+  white-space: nowrap;
+}
+.quote-btn {
+  background: var(--red);
+  color: #fff;
+  border: none;
+  font-family: var(--ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 13px 22px;
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease), background 0.13s;
+}
+.quote-btn:hover:not(:disabled) {
+  background: #c82020;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 22px rgba(224,48,48,0.4);
+}
+.quote-btn:active:not(:disabled) { transform: scale(0.97); }
+.quote-btn:disabled {
+  background: var(--panel2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  cursor: not-allowed;
+}
+
+/* ── MODAL ── */
+.modal-backdrop {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.72);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+.modal-backdrop.open { display: flex; }
+.modal {
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 40px 44px 36px;
+  width: 440px;
+  max-width: 92vw;
+  box-shadow: 0 36px 88px rgba(0,0,0,0.75);
+  animation: modalIn 0.26s var(--ease-out) both;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.96) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.modal-eyebrow {
+  font-family: var(--ui);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.modal-title {
+  font-family: var(--ui);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink);
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+.modal-sub {
+  font-family: var(--ui);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 28px;
+}
+.modal-fields { display: flex; flex-direction: column; gap: 10px; }
+.modal-input {
+  width: 100%;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  color: var(--ink);
+  padding: 12px 14px;
+  border-radius: 3px;
+  font-family: var(--body);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.18s;
+}
+.modal-input:focus { border-color: var(--border2); }
+.modal-input::placeholder { color: var(--muted); }
+.modal-actions { display: flex; gap: 8px; margin-top: 22px; }
+.modal-cancel {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--ink2);
+  font-family: var(--ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 12px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.modal-cancel:hover { border-color: var(--border2); color: var(--ink); }
+.modal-submit {
+  flex: 2;
+  background: var(--red);
+  color: #fff;
+  border: none;
+  font-family: var(--ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 12px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.13s, box-shadow 0.13s;
+}
+.modal-submit:hover { background: #c82020; box-shadow: 0 4px 18px rgba(224,48,48,0.35); }
+
+/* ── Scroll-fade hint on parts track right edge ── */
+.parts-track-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+}
+.parts-track-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 52px;
+  background: linear-gradient(to right, transparent, var(--panel));
+  pointer-events: none;
+  z-index: 5;
+  /* only show when there's overflow — JS toggles .has-overflow */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.parts-track-wrap.has-overflow::after { opacity: 1; }
+
+/* ════════════════════════════════════════
+   RESPONSIVE — TABLET  ≤ 900px
+════════════════════════════════════════ */
+@media (max-width: 900px) {
+  /* Hide nav links + CTA, keep brand only */
+  .nav-links { display: none; }
+  .nav-cta   { display: none; }
+  .part-card { width: 168px; height: 124px; }
+}
+
+/* ════════════════════════════════════════
+   RESPONSIVE — MOBILE  ≤ 600px
+   Stays full-screen locked — no page scroll.
+   Stage shrinks, panel stays at bottom.
+════════════════════════════════════════ */
+@media (max-width: 600px) {
+  /* Keep locked layout */
+  html, body { overflow: hidden; height: 100%; }
+  .layout    { height: 100dvh; }
+
+  /* ── Nav: brand only, compact ── */
+  nav { height: 48px; padding: 0 16px; }
+  .nav-brand { font-size: 16px; }
+
+  /* ── Subheader: two rows on mobile ── */
+  .subheader {
+    height: auto;
+    flex-wrap: wrap;
+    padding: 8px 16px;
+    gap: 8px;
+    row-gap: 7px;
+  }
+  .subheader-sep    { display: none; }
+  .subheader-spacer { display: none; }
+  .model-brand-label { display: none; }
+  /* Row 1: model name full width */
+  .model-identity { width: 100%; }
+  .model-name { font-size: 13px; letter-spacing: 0.06em; }
+  /* Row 2: both tab groups side by side, each half width */
+  .subheader .tab-group {
+    flex: 1;
+    justify-content: center;
+  }
+  /* angle tabs right-aligned */
+  #angleTabs { margin-left: 0 !important; }
+  .tab-btn { font-size: 10px; padding: 4px 10px; letter-spacing: 0.06em; }
+
+  /* ── Stage: flex:1 fills remaining height ── */
+  .car-wrap { width: 96vw; }
+
+  .stage-tag { top: 10px; right: 12px; }
+  .stage-tag-line1 { font-size: 8px; letter-spacing: 0.2em; }
+  .stage-tag-line2 { font-size: 10px; letter-spacing: 0.12em; margin-top: 2px; }
+
+  .kit-total { bottom: 12px; left: 14px; }
+  .kit-total-label { font-size: 9px; letter-spacing: 0.22em; }
+  .kit-total-amount { font-size: 32px; }
+  .kit-parts-count  { font-size: 10px; margin-top: 2px; }
+
+  /* ── Bottom panel: shorter, action row below cards ── */
+  .bottom-panel {
+    height: auto;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .parts-track {
+    padding: 12px 16px 12px;
+    gap: 10px;
+    height: auto;
+  }
+  .part-card {
+    width: 148px;
+    height: 116px;
+    padding: 10px 11px;
+  }
+  .part-thumb-wrap { width: 46px; height: 46px; }
+  .part-name  { font-size: 12px; }
+  .part-sku   { font-size: 9px; }
+  .part-price { font-size: 15px; }
+  .toggle-btn { width: 22px; height: 22px; font-size: 15px; }
+  .card-bottom { margin-top: 8px; padding-top: 8px; }
+
+  /* Action panel as a horizontal bar below cards */
+  .action-panel {
+    border-left: none;
+    border-top: 1px solid var(--border);
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    min-width: unset;
+    gap: 12px;
+  }
+  .selected-label { font-size: 11px; }
+  .quote-btn { padding: 11px 20px; font-size: 11px; }
+
+  /* Modal */
+  .modal { padding: 28px 22px 24px; }
+  .modal-title { font-size: 20px; }
+}
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 178px;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: var(--panel2);
+  border: 1px solid var(--border2);
+  color: var(--ink);
+  font-family: var(--ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 12px 24px;
+  border-radius: 4px;
+  z-index: 200;
+  opacity: 0;
+  transition: opacity 0.26s, transform 0.26s;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- SVG highlight filter: dark pixels → red, white bg → transparent -->
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="partHighlight" color-interpolation-filters="sRGB"
+            x="0%" y="0%" width="100%" height="100%">
+      <feColorMatrix id="highlightMatrix" type="matrix" result="redMask"
+        values="0 0 0 0 0.88
+                0 0 0 0 0.06
+                0 0 0 0 0.06
+               -0.33 -0.33 -0.33 0 1" />
+      <feComposite in="redMask" in2="SourceGraphic" operator="in" />
+    </filter>
+  </defs>
+</svg>
+
+<div class="layout">
+
+  <!-- NAV with carbon fiber shimmer -->
+  <nav class="cf-surface">
+    <span class="nav-brand">9S <span>Carbon</span></span>
+    <div class="nav-links">
+      <a class="nav-link" href="#">Collections</a>
+      <a class="nav-link" href="#">Models</a>
+      <a class="nav-link" href="#">Technology</a>
+      <a class="nav-link" href="#">Gallery</a>
+      <a class="nav-link" href="#">About</a>
+    </div>
+    <button class="nav-cta">Contact Us</button>
+  </nav>
+
+  <!-- SUBHEADER -->
+  <div class="subheader">
+    <div class="model-identity">
+      <span class="model-brand-label">9S Carbon</span>
+      <span class="model-name">Audi RS6 Avant</span>
+    </div>
+    <div class="subheader-sep"></div>
+    <div class="tab-group" id="materialTabs">
+      <button class="tab-btn active" data-mat="dc" onclick="setMaterial('dc', this)">Dry Carbon</button>
+      <button class="tab-btn"        data-mat="tc" onclick="setMaterial('tc', this)">Twill Carbon</button>
+    </div>
+    <div class="subheader-spacer"></div>
+    <div class="tab-group" id="angleTabs" style="margin-left:auto">
+      <button class="tab-btn active" data-angle="front" onclick="setAngle('front', this)">Front</button>
+      <button class="tab-btn"        data-angle="rear"  onclick="setAngle('rear',  this)">Rear</button>
+      <button class="tab-btn"        data-angle="side"  onclick="setAngle('side',  this)">Side</button>
+    </div>
+  </div>
+
+  <!-- STAGE — clean neutral gray, no spotlight -->
+  <div class="stage">
+    <div class="stage-tag">
+      <span class="stage-tag-line1">Audi — RS6 Avant</span>
+      <span class="stage-tag-line2">9S Carbon Kit</span>
+    </div>
+    <div class="kit-total">
+      <span class="kit-total-label">Kit Total</span>
+      <span class="kit-total-amount" id="kitTotal">$0</span>
+      <div class="kit-parts-count" id="kitPartsCount"></div>
+    </div>
+    <div class="car-wrap" id="carWrap">
+      <img class="car-base" src="./car-base.png" alt="Audi RS6 Avant"
+           id="carBase" draggable="false" />
+    </div>
+  </div>
+
+  <!-- BOTTOM PANEL with carbon shimmer (slower, offset) -->
+  <div class="bottom-panel cf-surface cf-surface-slow">
+    <div class="parts-track-wrap" id="partsTrackWrap">
+      <div class="parts-track" id="partsTrack"></div>
+    </div>
+    <div class="action-panel">
+      <span class="selected-label" id="selectedLabel">0 Parts Selected</span>
+      <button class="quote-btn" id="quoteBtn" disabled onclick="openModal()">
+        Request Quote
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal-backdrop" id="modalBackdrop" onclick="onBackdropClick(event)">
+  <div class="modal">
+    <div class="modal-eyebrow">9S Carbon — Audi RS6 Avant</div>
+    <div class="modal-title">Request a Quote</div>
+    <div class="modal-sub" id="modalSub"></div>
+    <div class="modal-fields">
+      <input class="modal-input" type="text"  placeholder="Full Name"        id="mName" />
+      <input class="modal-input" type="email" placeholder="Email Address"    id="mEmail" />
+      <input class="modal-input" type="tel"   placeholder="Phone (optional)" id="mPhone" />
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-submit" onclick="submitQuote()">Submit Inquiry →</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const PARTS = [
+  {
+    id: 'front-lip',
+    name: 'Front Lip',
+    sku: 'RS6.9.LIP.01',
+    prices: { dc: 1020, tc: 1020 },
+    overlay: './frontlip-overlay.png',
+    thumb:   './frontlip-product.png',
+    angles:  ['front', 'side'],
+  },
+  {
+    id: 'side-skirts',
+    name: 'Side Skirts',
+    sku: 'RS6.9.SKT.01',
+    prices: { dc: 1020, tc: 1020 },
+    overlay: './sidesk-overlay.png',
+    thumb:   './sidesk-product.png',
+    angles:  ['front', 'side'],
+  },
+  {
+    id: 'rear-diffuser',
+    name: 'Rear Diffuser',
+    sku: 'RS6.9.DFS.01',
+    prices: { dc: 1220, tc: 1220 },
+    overlay: './diffuser-overlay.png',
+    thumb:   './diffuser-product.png',
+    angles:  ['rear'],
+  },
+  {
+    id: 'rear-wing',
+    name: 'Rear Wing',
+    sku: 'RS6.9.WNG.01',
+    prices: { dc: 680, tc: 680 },
+    overlay: './wing-overlay.png',
+    thumb:   './wing-product.png',
+    angles:  ['rear'],
+  },
+];
+
+const state = { material: 'dc', angle: 'front', selected: new Set() };
+
+function init() {
+  const carWrap = document.getElementById('carWrap');
+  const track   = document.getElementById('partsTrack');
+
+  PARTS.forEach(part => {
+    // overlay image
+    const img = document.createElement('img');
+    img.className = 'part-overlay';
+    img.id  = `overlay-${part.id}`;
+    img.src = part.overlay;
+    img.alt = part.name;
+    img.draggable = false;
+    carWrap.appendChild(img);
+
+    // card scaffold
+    const card = document.createElement('div');
+    card.className = 'part-card';
+    card.id = `card-${part.id}`;
+    card.onclick = () => togglePart(part.id);
+
+    // thumb
+    const thumbImg = document.createElement('img');
+    thumbImg.className = 'part-thumb';
+    thumbImg.src = part.thumb;
+    thumbImg.alt = part.name;
+    thumbImg.draggable = false;
+    const thumbWrap = document.createElement('div');
+    thumbWrap.className = 'part-thumb-wrap';
+    thumbWrap.appendChild(thumbImg);
+
+    // meta
+    const meta = document.createElement('div');
+    meta.className = 'card-meta';
+    const nameEl = document.createElement('div');
+    nameEl.className = 'part-name';
+    nameEl.textContent = part.name;
+    const skuEl = document.createElement('div');
+    skuEl.className = 'part-sku';
+    skuEl.textContent = part.sku;
+    meta.appendChild(nameEl);
+    meta.appendChild(skuEl);
+
+    const top = document.createElement('div');
+    top.className = 'card-top';
+    top.appendChild(thumbWrap);
+    top.appendChild(meta);
+
+    // price + button row
+    const price = part.prices[state.material];
+    const priceEl = document.createElement('span');
+    priceEl.className = 'part-price';
+    priceEl.id = `price-${part.id}`;
+    priceEl.textContent = `$${price.toLocaleString()}`;
+
+    const btn = document.createElement('button');
+    btn.className = 'toggle-btn';
+    btn.id = `btn-${part.id}`;
+    btn.textContent = '+';
+    btn.onclick = e => { e.stopPropagation(); togglePart(part.id); };
+
+    const bottom = document.createElement('div');
+    bottom.className = 'card-bottom';
+    bottom.appendChild(priceEl);
+    bottom.appendChild(btn);
+
+    card.appendChild(top);
+    card.appendChild(bottom);
+    track.appendChild(card);
+
+    // hide cards that don't match the initial angle
+    if (part.angles && !part.angles.includes(state.angle)) {
+      card.style.display = 'none';
+    }
+  });
+}
+
+function togglePart(id) {
+  if (state.selected.has(id)) state.selected.delete(id);
+  else state.selected.add(id);
+  const on = state.selected.has(id);
+
+  const part       = PARTS.find(p => p.id === id);
+  const angleMatch = !part.angles || part.angles.includes(state.angle);
+  const overlay    = document.getElementById(`overlay-${id}`);
+  if (overlay) {
+    overlay.classList.toggle('visible',     on && angleMatch);
+    overlay.classList.toggle('highlighted', on && angleMatch);
+  }
+  document.getElementById(`card-${id}`).classList.toggle('selected', on);
+  document.getElementById(`btn-${id}`).textContent = on ? '−' : '+';
+  updateSummary();
+}
+
+function setMaterial(mat, el) {
+  state.material = mat;
+  document.querySelectorAll('#materialTabs .tab-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  PARTS.forEach(part => {
+    const price = part.prices[mat];
+    const el = document.getElementById(`price-${part.id}`);
+    if (el) el.textContent = price ? `$${price.toLocaleString()}` : '—';
+  });
+  updateSummary();
+}
+
+function setAngle(angle, el) {
+  state.angle = angle;
+  document.querySelectorAll('#angleTabs .tab-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+
+  // Switch base image
+  const bases = { front: './car-base.png', side: './car-base.png', rear: './car-rear-base.png' };
+  document.getElementById('carBase').src = bases[angle] || './car-base.png';
+
+  // Show/hide cards + sync overlay visibility with new angle
+  PARTS.forEach(part => {
+    const card    = document.getElementById(`card-${part.id}`);
+    const overlay = document.getElementById(`overlay-${part.id}`);
+    const match   = !part.angles || part.angles.includes(angle);
+
+    if (card) card.style.display = match ? '' : 'none';
+    if (overlay) {
+      const isSelected = state.selected.has(part.id);
+      overlay.classList.toggle('visible',     isSelected && match);
+      overlay.classList.toggle('highlighted', isSelected && match);
+    }
+  });
+
+  updateSummary();
+  requestAnimationFrame(updateScrollFade);
+}
+
+function updateSummary() {
+  let total = 0;
+  state.selected.forEach(id => {
+    const part = PARTS.find(p => p.id === id);
+    total += part?.prices[state.material] || 0;
+  });
+  const count = state.selected.size;
+  const el = document.getElementById('kitTotal');
+  el.textContent = total ? `$${total.toLocaleString()}` : '$0';
+  el.classList.toggle('has-items', count > 0);
+  document.getElementById('selectedLabel').textContent =
+    count === 0 ? '0 Parts Selected' :
+    count === 1 ? '1 Part Selected'  : `${count} Parts Selected`;
+  document.getElementById('kitPartsCount').textContent =
+    count > 0 ? `${count} part${count > 1 ? 's' : ''} configured` : '';
+  document.getElementById('quoteBtn').disabled = count === 0;
+}
+
+function openModal() {
+  const names = [...state.selected].map(id => PARTS.find(p => p.id === id)?.name).filter(Boolean);
+  document.getElementById('modalSub').textContent = names.join(' + ');
+  document.getElementById('modalBackdrop').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modalBackdrop').classList.remove('open');
+}
+function onBackdropClick(e) {
+  if (e.target === document.getElementById('modalBackdrop')) closeModal();
+}
+function submitQuote() {
+  closeModal();
+  showToast('✓ Inquiry received — our team will be in touch');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+init();
+updateSummary();
+
+/* ── Scroll-fade: show right-edge hint when cards overflow ── */
+function updateScrollFade() {
+  const track = document.getElementById('partsTrack');
+  const wrap  = document.getElementById('partsTrackWrap');
+  if (!track || !wrap) return;
+  const overflowing = track.scrollWidth > wrap.clientWidth + 2;
+  wrap.classList.toggle('has-overflow', overflowing);
+  // Hide fade when scrolled to end
+  track.addEventListener('scroll', () => {
+    const atEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 8;
+    wrap.classList.toggle('has-overflow', !atEnd && overflowing);
+  }, { passive: true });
+}
+// Run after fonts/images settle
+requestAnimationFrame(() => setTimeout(updateScrollFade, 100));
+window.addEventListener('resize', updateScrollFade);
+</script>
+</body>
+</html>

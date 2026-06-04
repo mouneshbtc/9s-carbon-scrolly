@@ -1,26 +1,88 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg:      #0d0c0a;
+  --nav:     #0f0e0c;
+  --panel:   #131210;
+  --panel2:  #1c1b18;
+  --border:  #2a2926;
+  --border2: #3a3935;
+  --ink:     #f0ece5;
+  --ink2:    #9a978f;
+  --muted:   #5a5854;
+  --gold:    #c8a84b;
+  --ease:    cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-gold: var(--gold);
+  --color-ink: var(--ink);
+  --color-ink2: var(--ink2);
+  --color-border: var(--border);
+  --font-ui: var(--font-barlow-condensed);
+  --font-body: var(--font-barlow);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: auto;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-barlow, 'Barlow', sans-serif);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
+
+/* Carbon fiber texture overlay */
+.cf-surface {
+  position: relative;
+  overflow: hidden;
+}
+.cf-surface::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(45deg,
+      rgba(255,255,255,0.028) 0, rgba(255,255,255,0.028) 1px,
+      transparent 1px, transparent 4px
+    ),
+    repeating-linear-gradient(-45deg,
+      rgba(255,255,255,0.028) 0, rgba(255,255,255,0.028) 1px,
+      transparent 1px, transparent 4px
+    );
+  pointer-events: none;
+  z-index: 0;
+}
+@keyframes cfShimmer {
+  0%   { transform: translateX(-120%) skewX(-20deg); }
+  100% { transform: translateX(420%)  skewX(-20deg); }
+}
+.cf-surface::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 18%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255,255,255,0.055) 40%,
+    rgba(255,255,255,0.08)  50%,
+    rgba(255,255,255,0.055) 60%,
+    transparent 100%
+  );
+  animation: cfShimmer 9s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+.cf-surface > * { position: relative; z-index: 2; }
