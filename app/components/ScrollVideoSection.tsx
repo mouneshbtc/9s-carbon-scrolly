@@ -12,6 +12,14 @@ export default function ScrollVideoSection() {
   const [showEnd, setShowEnd] = useState(false)
   const [showScroll, setShowScroll] = useState(true)
 
+  // Reset scroll to top on mount — handles browser back-navigation restoring scroll position
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      history.scrollRestoration = 'manual'
+      window.scrollTo(0, 0)
+    }
+  }, [])
+
   // Force-load video — iOS Safari ignores preload="auto" without this
   useEffect(() => {
     const video = videoRef.current
@@ -24,7 +32,6 @@ export default function ScrollVideoSection() {
     video.addEventListener('canplay', onReady)
     video.addEventListener('error', onError)
 
-    // Explicitly trigger load — required on iOS
     video.load()
 
     if (video.readyState >= 1) setReady(true)
@@ -36,7 +43,7 @@ export default function ScrollVideoSection() {
     }
   }, [])
 
-  // Fallback: if video hasn't loaded after 4s, show end state anyway
+  // Fallback: if video hasn't loaded after 4s, skip to end state
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!ready) {
@@ -48,7 +55,7 @@ export default function ScrollVideoSection() {
     return () => clearTimeout(timer)
   }, [ready])
 
-  // Scroll scrubbing with rAF for smooth mobile performance
+  // Scroll scrubbing with rAF
   useEffect(() => {
     if (!ready) return
     const section = sectionRef.current
@@ -80,7 +87,6 @@ export default function ScrollVideoSection() {
     }
   }, [ready])
 
-  // If video completely failed, shorten the section so user isn't stuck scrolling
   const sectionHeight = videoFailed ? '100vh' : '500vh'
 
   return (
@@ -92,7 +98,7 @@ export default function ScrollVideoSection() {
         overflow: 'hidden',
         background: '#0d0c0a',
       }}>
-        {/* Video — hidden via opacity if failed, poster still shows */}
+        {/* Video */}
         <video
           ref={videoRef}
           src="/hero-animation.mp4"
@@ -111,7 +117,7 @@ export default function ScrollVideoSection() {
           }}
         />
 
-        {/* Poster fallback — shown when video fails on mobile */}
+        {/* Poster fallback */}
         {videoFailed && (
           <img
             src="/hero-poster.jpg"
@@ -157,7 +163,6 @@ export default function ScrollVideoSection() {
           textAlign: 'center',
         }}>
           <div style={{ width: '48px', height: '1px', background: 'var(--gold, #c8a84b)' }} />
-
           <h1 style={{
             fontFamily: 'var(--font-barlow-condensed, sans-serif)',
             fontSize: 'clamp(26px, 6vw, 52px)',
@@ -172,7 +177,6 @@ export default function ScrollVideoSection() {
             <span style={{ color: 'var(--gold, #c8a84b)' }}>that are not supposed</span><br />
             to be stock.
           </h1>
-
           <a href="/visualizer.html" className="cta-btn" style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -194,26 +198,63 @@ export default function ScrollVideoSection() {
           </a>
         </div>
 
-        {/* Scroll cue */}
+        {/* Scroll indicator — prominent, animated */}
         <div style={{
           position: 'absolute',
-          bottom: '28px',
+          bottom: '32px',
           left: '50%',
           transform: 'translateX(-50%)',
-          fontFamily: 'var(--font-barlow-condensed, sans-serif)',
-          fontSize: '9px',
-          fontWeight: 600,
-          letterSpacing: '0.5em',
-          textTransform: 'uppercase',
-          color: 'var(--muted, #5a5854)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '8px',
           zIndex: 2,
           opacity: showScroll && !videoFailed ? 1 : 0,
-          transition: 'opacity 0.4s ease',
-          animation: 'pulse 2.4s ease-in-out infinite',
-          whiteSpace: 'nowrap',
+          transition: 'opacity 0.5s ease',
           pointerEvents: 'none',
         }}>
-          Scroll
+          {/* Label */}
+          <span style={{
+            fontFamily: 'var(--font-barlow-condensed, sans-serif)',
+            fontSize: '10px',
+            fontWeight: 600,
+            letterSpacing: '0.45em',
+            textTransform: 'uppercase',
+            color: 'var(--ink2, #9a978f)',
+            whiteSpace: 'nowrap',
+          }}>
+            Scroll to reveal
+          </span>
+
+          {/* Bouncing chevron */}
+          <svg
+            width="20" height="20" viewBox="0 0 20 20" fill="none"
+            style={{ animation: 'bounce 1.6s ease-in-out infinite' }}
+          >
+            <polyline
+              points="4,7 10,13 16,7"
+              stroke="var(--gold, #c8a84b)"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          </svg>
+
+          {/* Second chevron, delayed — gives a cascading feel */}
+          <svg
+            width="20" height="20" viewBox="0 0 20 20" fill="none"
+            style={{ animation: 'bounce 1.6s ease-in-out 0.2s infinite', marginTop: '-10px', opacity: 0.4 }}
+          >
+            <polyline
+              points="4,7 10,13 16,7"
+              stroke="var(--gold, #c8a84b)"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          </svg>
         </div>
 
         {/* Progress bar */}
@@ -234,6 +275,10 @@ export default function ScrollVideoSection() {
       </div>
 
       <style>{`
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); opacity: 1; }
+          50% { transform: translateY(6px); opacity: 0.5; }
+        }
         @keyframes pulse {
           0%, 100% { opacity: 0.2; }
           50% { opacity: 0.8; }
