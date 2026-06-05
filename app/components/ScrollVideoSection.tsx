@@ -2,15 +2,22 @@
 
 import { useEffect, useRef, useState } from 'react'
 
+function isAndroid() {
+  if (typeof navigator === 'undefined') return false
+  return /android/i.test(navigator.userAgent)
+}
+
 export default function ScrollVideoSection() {
   const sectionRef = useRef<HTMLElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const rafRef = useRef<number>(0)
   const progressRef = useRef(0)
+  const lastSeekRef = useRef(0)
   const [ready, setReady] = useState(false)
   const [videoFailed, setVideoFailed] = useState(false)
   const [showEnd, setShowEnd] = useState(false)
   const [showScroll, setShowScroll] = useState(true)
+  const [android] = useState(isAndroid)
 
   // Reset scroll to top on mount — handles browser back-navigation restoring scroll position
   useEffect(() => {
@@ -56,21 +63,28 @@ export default function ScrollVideoSection() {
   }, [ready])
 
   // Scroll scrubbing with rAF
+  // Android: throttle seeks to ~30fps (33ms) so the decoder queue never backs up
   useEffect(() => {
     if (!ready) return
     const section = sectionRef.current
     const video = videoRef.current
     if (!section || !video) return
 
+    const SEEK_THROTTLE = android ? 33 : 0   // ms between seeks on Android
+
     const onScroll = () => {
       cancelAnimationFrame(rafRef.current)
       rafRef.current = requestAnimationFrame(() => {
+        const now = performance.now()
         const { top, height } = section.getBoundingClientRect()
         const progress = Math.max(0, Math.min(1, -top / (height - window.innerHeight)))
         progressRef.current = progress
 
         if (video.duration && isFinite(video.duration)) {
-          video.currentTime = progress * video.duration
+          if (now - lastSeekRef.current >= SEEK_THROTTLE) {
+            video.currentTime = progress * video.duration
+            lastSeekRef.current = now
+          }
         }
 
         setShowEnd(progress >= 0.88)
@@ -85,7 +99,7 @@ export default function ScrollVideoSection() {
       window.removeEventListener('scroll', onScroll)
       cancelAnimationFrame(rafRef.current)
     }
-  }, [ready])
+  }, [ready, android])
 
   const sectionHeight = videoFailed ? '100vh' : '500vh'
 
@@ -98,10 +112,10 @@ export default function ScrollVideoSection() {
         overflow: 'hidden',
         background: '#0d0c0a',
       }}>
-        {/* Video */}
+        {/* Video — Android gets a 720p all-keyframe encode for smooth seeking */}
         <video
           ref={videoRef}
-          src="/hero-animation.mp4"
+          src={android ? '/hero-animation-android.mp4' : '/hero-animation.mp4'}
           playsInline
           muted
           preload="auto"
